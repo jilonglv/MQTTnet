@@ -586,7 +586,7 @@ namespace MQTTnet.Formatter.V3
             return MqttPacketWriter.BuildFixedHeader(type);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static void ThrowIfBodyIsEmpty(IMqttPacketBodyReader body)
         {
             if (body == null || body.Length == 0)

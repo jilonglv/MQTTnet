@@ -159,7 +159,7 @@ namespace MQTTnet.Formatter
             throw new MqttProtocolViolationException($"Protocol '{protocolName}' not supported.");
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         void ThrowIfFormatterNotSet()
         {
             if (_formatter == null)

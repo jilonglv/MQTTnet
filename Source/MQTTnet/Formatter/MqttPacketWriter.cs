@@ -196,7 +196,7 @@ namespace MQTTnet.Formatter
             Write(buffer.Array, buffer.Offset, buffer.Count);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         void EnsureAdditionalCapacity(int additionalCapacity)
         {
             var freeSpace = _buffer.Length - _offset;
@@ -208,7 +208,7 @@ namespace MQTTnet.Formatter
             EnsureCapacity(_buffer.Length + additionalCapacity - freeSpace);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         void EnsureCapacity(int capacity)
         {
             var newBufferLength = _buffer.Length;
@@ -226,7 +226,7 @@ namespace MQTTnet.Formatter
             Array.Resize(ref _buffer, newBufferLength);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         void IncreasePosition(int length)
         {
             _offset += length;

@@ -129,7 +129,7 @@ namespace MQTTnet.Formatter
             return result;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ValidateReceiveBuffer(int length)
         {
             if (_length < _offset + length)

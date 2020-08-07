@@ -1,4 +1,5 @@
-﻿using MQTTnet.Channel;
+﻿#if !NET40
+using MQTTnet.Channel;
 using MQTTnet.Client.Options;
 using MQTTnet.Internal;
 using System;
@@ -224,3 +225,4 @@ namespace MQTTnet.Implementations
         }
     }
 }
+#endif
