@@ -14,7 +14,7 @@ namespace MQTTnet.Client.Receiving
             _handler = context =>
             {
                 handler(context);
-                return Task.FromResult(0);
+                return TaskExtension.FromResult(0);
             };
         }
 

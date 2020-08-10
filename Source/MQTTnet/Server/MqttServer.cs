@@ -142,7 +142,7 @@ namespace MQTTnet.Server
 
             _clientSessionsManager.DispatchApplicationMessage(applicationMessage, null);
 
-            return Task.FromResult(new MqttClientPublishResult());
+            return TaskExtension.FromResult(new MqttClientPublishResult());
         }
 
         public async Task StartAsync(IMqttServerOptions options)

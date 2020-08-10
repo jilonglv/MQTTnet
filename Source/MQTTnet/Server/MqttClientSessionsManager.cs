@@ -51,7 +51,11 @@ namespace MQTTnet.Server
 
         public void Start()
         {
+#if NET40
+            TaskExtension.Run(() => TryProcessQueuedApplicationMessagesAsync(_cancellationToken).Wait(), _cancellationToken).Forget(_logger);
+#else
             Task.Run(() => TryProcessQueuedApplicationMessagesAsync(_cancellationToken), _cancellationToken).Forget(_logger);
+#endif
         }
 
         public async Task StopAsync()
@@ -85,7 +89,7 @@ namespace MQTTnet.Server
                 result.Add(clientStatus);
             }
 
-            return Task.FromResult((IList<IMqttClientStatus>)result);
+            return TaskExtension.FromResult((IList<IMqttClientStatus>)result);
         }
 
         public Task<IList<IMqttSessionStatus>> GetSessionStatusAsync()
@@ -100,7 +104,7 @@ namespace MQTTnet.Server
                 result.Add(sessionStatus);
             }
 
-            return Task.FromResult((IList<IMqttSessionStatus>)result);
+            return TaskExtension.FromResult((IList<IMqttSessionStatus>)result);
         }
 
         public void DispatchApplicationMessage(MqttApplicationMessage applicationMessage, MqttClientConnection sender)

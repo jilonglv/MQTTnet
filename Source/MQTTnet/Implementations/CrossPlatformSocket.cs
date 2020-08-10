@@ -22,7 +22,12 @@ namespace MQTTnet.Implementations
         {
             // Having this constructor is important because avoiding the address family as parameter
             // will make use of dual mode in the .net framework.
+#if NET40
+            _socket = new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp);
+            DualMode = true;
+#else
             _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+#endif
         }
 
         public CrossPlatformSocket(Socket socket)
@@ -36,12 +41,33 @@ namespace MQTTnet.Implementations
             get => (int)_socket.GetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay) > 0;
             set => _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, value ? 1 : 0);
         }
-
+#if NET40  
+        public bool DualMode
+        {
+            get
+            {
+                if (_socket.AddressFamily != AddressFamily.InterNetworkV6)
+                {
+                    throw new NotSupportedException("net_invalidversion");
+                }
+                return ((int)_socket.GetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only) == 0);
+            }
+            set
+            {
+                if (_socket.AddressFamily != AddressFamily.InterNetworkV6)
+                {
+                    throw new NotSupportedException("net_invalidversion");
+                }
+               _socket.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, value ? 0 : 1);
+            }
+        }
+#else
         public bool DualMode
         {
             get => _socket.DualMode;
             set => _socket.DualMode = value;
         }
+#endif
 
         public int ReceiveBufferSize
         {
@@ -67,7 +93,7 @@ namespace MQTTnet.Implementations
         {
             try
             {
-#if NET452 || NET461
+#if NET452 || NET461 || NET40
                 var clientSocket = await Task.Factory.FromAsync(_socket.BeginAccept, _socket.EndAccept, null).ConfigureAwait(false);
                 return new CrossPlatformSocket(clientSocket);
 #else
@@ -107,7 +133,7 @@ namespace MQTTnet.Implementations
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-#if NET452 || NET461
+#if NET452 || NET461 || NET40
                     await Task.Factory.FromAsync(_socket.BeginConnect, _socket.EndConnect, host, port, null).ConfigureAwait(false);
 #else
                     await _socket.ConnectAsync(host, port).ConfigureAwait(false);
@@ -125,7 +151,7 @@ namespace MQTTnet.Implementations
         {
             try
             {
-#if NET452 || NET461
+#if NET452 || NET461 || NET40
                 await Task.Factory.FromAsync(SocketWrapper.BeginSend, _socket.EndSend, new SocketWrapper(_socket, buffer, socketFlags)).ConfigureAwait(false);
 #else
                 await _socket.SendAsync(buffer, socketFlags).ConfigureAwait(false);
@@ -141,7 +167,7 @@ namespace MQTTnet.Implementations
         {
             try
             {
-#if NET452 || NET461
+#if NET452 || NET461 || NET40
                 return await Task.Factory.FromAsync(SocketWrapper.BeginReceive, _socket.EndReceive, new SocketWrapper(_socket, buffer, socketFlags)).ConfigureAwait(false);
 #else
                 return await _socket.ReceiveAsync(buffer, socketFlags).ConfigureAwait(false);
@@ -171,7 +197,7 @@ namespace MQTTnet.Implementations
             _socket?.Dispose();
         }
 
-#if NET452 || NET461
+#if NET452 || NET461 || NET40
         class SocketWrapper
         {
             readonly Socket _socket;

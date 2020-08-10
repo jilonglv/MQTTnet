@@ -8,8 +8,8 @@ namespace MQTTnet.Implementations
         {
             get
             {
-#if NET452 
-                return Task.FromResult(0);
+#if NET452 || NET40
+                return TaskExtension.FromResult(0);
 #else
                 return Task.CompletedTask;
 #endif

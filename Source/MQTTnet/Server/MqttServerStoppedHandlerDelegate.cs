@@ -14,7 +14,7 @@ namespace MQTTnet.Server
             _handler = eventArgs =>
             {
                 handler(eventArgs);
-                return Task.FromResult(0);
+                return TaskExtension.FromResult(0);
             };
         }
 

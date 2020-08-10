@@ -12,7 +12,7 @@ namespace MQTTnet.Internal
 
         public AsyncLock()
         {
-            _releaser = Task.FromResult((IDisposable)new Releaser(this));
+            _releaser = TaskExtension.FromResult((IDisposable)new Releaser(this));
         }
 
         public Task<IDisposable> WaitAsync()
@@ -22,6 +22,10 @@ namespace MQTTnet.Internal
 
         public Task<IDisposable> WaitAsync(CancellationToken cancellationToken)
         {
+#if NET40
+            _semaphore.Wait();
+            return TaskExtension.FromResult(_releaser.Result);
+#else
             var task = _semaphore.WaitAsync(cancellationToken);
             if (task.Status == TaskStatus.RanToCompletion)
             {
@@ -32,6 +36,7 @@ namespace MQTTnet.Internal
                 (_, state) => (IDisposable)state, 
                 _releaser.Result, 
                 cancellationToken, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+#endif
         }
 
         public void Dispose()

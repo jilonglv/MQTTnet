@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace MQTTnet.Diagnostics
 {
@@ -44,18 +45,23 @@ namespace MQTTnet.Diagnostics
             {
                 message = "MESSAGE FORMAT INVALID: " + message;
             }
-
+            
+           
             var logMessage = new MqttNetLogMessage
             {
                 LogId = _logId,
                 Timestamp = DateTime.UtcNow,
                 Source = source,
-                ThreadId = Environment.CurrentManagedThreadId,
+                ThreadId =
+#if NET40
+            Thread.CurrentThread.ManagedThreadId,
+#else
+            Environment.CurrentManagedThreadId,
+#endif
                 Level = level,
                 Message = message,
                 Exception = exception
             };
-
             if (hasGlobalListeners)
             {
                 MqttNetGlobalLogger.Publish(logMessage);

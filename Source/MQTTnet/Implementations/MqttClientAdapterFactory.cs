@@ -26,10 +26,10 @@ namespace MQTTnet.Implementations
                         return new MqttChannelAdapter(new MqttTcpChannel(options), new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttPacketWriter()), _logger);
                     }
 
-                case MqttClientWebSocketOptions webSocketOptions:
-                    {
-                        return new MqttChannelAdapter(new MqttWebSocketChannel(webSocketOptions), new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttPacketWriter()), _logger);
-                    }
+                //case MqttClientWebSocketOptions webSocketOptions:
+                //    {
+                //        return new MqttChannelAdapter(new MqttWebSocketChannel(webSocketOptions), new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttPacketWriter()), _logger);
+                //    }
 
                 default:
                     {

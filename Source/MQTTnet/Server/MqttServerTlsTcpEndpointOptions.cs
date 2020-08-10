@@ -50,7 +50,10 @@ namespace MQTTnet.Server
         public bool ClientCertificateRequired { get; set; }
 
         public bool CheckCertificateRevocation { get; set; }
-
+#if NET40
+        public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls;
+#else
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12;
+#endif
     }
 }

@@ -23,12 +23,12 @@ namespace MQTTnet.Internal
 
         public Task ConnectAsync(CancellationToken cancellationToken)
         {
-            return Task.FromResult(0);
+            return TaskExtension.FromResult(0);
         }
 
         public Task DisconnectAsync(CancellationToken cancellationToken)
         {
-            return Task.FromResult(0);
+            return TaskExtension.FromResult(0);
         }
 
         public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)

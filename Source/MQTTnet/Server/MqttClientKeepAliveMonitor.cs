@@ -32,8 +32,11 @@ namespace MQTTnet.Server
             {
                 return;
             }
-
+#if NET40
+            TaskExtension.Run(() => RunAsync(keepAlivePeriod, cancellationToken).Wait(), cancellationToken).Forget(_logger);
+#else
             Task.Run(() => RunAsync(keepAlivePeriod, cancellationToken), cancellationToken).Forget(_logger);
+#endif
         }
 
         public void Pause()
@@ -74,7 +77,7 @@ namespace MQTTnet.Server
                     // because the server allows 1.5 times the keep alive value. This means that a value of 5 allows
                     // up to 7.5 seconds. With an interval of 2.5 (5 / 2) the 7.5 is also affected. Waiting the whole
                     // keep alive time will hit at 10 instead of 7.5 (but only one time instead of two times).
-                    await Task.Delay(TimeSpan.FromSeconds(keepAlivePeriod * 0.5D), cancellationToken).ConfigureAwait(false);
+                    await TaskExtension.Delay(TimeSpan.FromSeconds(keepAlivePeriod * 0.5D), cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException)

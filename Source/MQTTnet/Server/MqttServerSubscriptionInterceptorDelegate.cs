@@ -10,11 +10,11 @@ namespace MQTTnet.Server
         public MqttServerSubscriptionInterceptorDelegate(Action<MqttSubscriptionInterceptorContext> callback)
         {
             if (callback == null) throw new ArgumentNullException(nameof(callback));
-
+            
             _callback = context =>
             {
                 callback(context);
-                return Task.FromResult(0);
+                return TaskExtension.FromResult(0);
             };
         }
 

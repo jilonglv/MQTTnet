@@ -319,7 +319,7 @@ namespace MQTTnet.Adapter
                     throw new OperationCanceledException();
                 }
             }
-
+#if !NET40
             if (exception is COMException comException)
             {
                 if ((uint)comException.HResult == ErrorOperationAborted)
@@ -327,7 +327,7 @@ namespace MQTTnet.Adapter
                     throw new OperationCanceledException();
                 }
             }
-
+#endif
             throw new MqttCommunicationException(exception);
         }
     }

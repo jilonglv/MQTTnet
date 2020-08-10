@@ -81,7 +81,12 @@ namespace MQTTnet.Implementations
                     var sslStream = new SslStream(networkStream, false, InternalUserCertificateValidationCallback);
                     try
                     {
+#if NET40
+                         Task.Factory.FromAsync((callback, state) => sslStream.BeginAuthenticateAsClient(_options.Server, LoadCertificates(), _options.TlsOptions.SslProtocol, !_options.TlsOptions.IgnoreCertificateRevocationErrors, callback, state), sslStream.EndAuthenticateAsClient, null).Wait();
+        
+#else
                         await sslStream.AuthenticateAsClientAsync(_options.Server, LoadCertificates(), _options.TlsOptions.SslProtocol, !_options.TlsOptions.IgnoreCertificateRevocationErrors).ConfigureAwait(false);
+#endif
                     }
                     catch
                     {
@@ -113,7 +118,7 @@ namespace MQTTnet.Implementations
         public Task DisconnectAsync(CancellationToken cancellationToken)
         {
             Dispose();
-            return Task.FromResult(0);
+            return TaskExtension.FromResult(0);
         }
 
         public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -144,12 +149,14 @@ namespace MQTTnet.Implementations
             }
             catch (IOException exception)
             {
+#if !NET40
                 if (exception.InnerException is SocketException socketException)
                 {
                     ExceptionDispatchInfo.Capture(socketException).Throw();
                 }
-
                 throw;
+#endif
+                throw exception;
             }
         }
 
@@ -179,12 +186,16 @@ namespace MQTTnet.Implementations
             }
             catch (IOException exception)
             {
+#if !NET40
                 if (exception.InnerException is SocketException socketException)
                 {
                     ExceptionDispatchInfo.Capture(socketException).Throw();
                 }
 
                 throw;
+#else
+                throw exception;
+#endif
             }
         }
 

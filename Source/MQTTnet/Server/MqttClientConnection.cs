@@ -149,8 +149,11 @@ namespace MQTTnet.Server
                 _channelAdapter.ReadingPacketCompletedCallback = OnAdapterReadingPacketCompleted;
 
                 Session.WillMessage = ConnectPacket.WillMessage;
-
+#if NET40
+                TaskExtension.Run(() => SendPendingPacketsAsync(_cancellationToken.Token).Wait(), _cancellationToken.Token).Forget(_logger);
+#else
                 Task.Run(() => SendPendingPacketsAsync(_cancellationToken.Token), _cancellationToken.Token).Forget(_logger);
+#endif
 
                 // TODO: Change to single thread in SessionManager. Or use SessionManager and stats from KeepAliveMonitor.
                 _keepAliveMonitor.Start(ConnectPacket.KeepAlivePeriod, _cancellationToken.Token);

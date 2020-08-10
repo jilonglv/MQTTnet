@@ -114,7 +114,12 @@ namespace MQTTnet.Formatter
         
         public byte[] ReadWithLengthPrefix()
         {
-            return ReadSegmentWithLengthPrefix().ToArray();
+            var arrSeg = ReadSegmentWithLengthPrefix();
+#if NET40
+            return arrSeg.Array.ToArray();
+#else
+            return arrSeg.ToArray();
+#endif
         }
 
         private ArraySegment<byte> ReadSegmentWithLengthPrefix()

@@ -19,7 +19,11 @@ namespace MQTTnet.Client.Options
 
         public Func<MqttClientCertificateValidationCallbackContext, bool> CertificateValidationHandler { get; set; }
 
+#if NET40
+        public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls;
+#else
         public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12;
+#endif
 
 #if WINDOWS_UWP
         public IEnumerable<IEnumerable<byte>> Certificates { get; set; }

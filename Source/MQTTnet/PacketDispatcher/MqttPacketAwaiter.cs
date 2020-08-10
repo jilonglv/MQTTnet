@@ -16,7 +16,7 @@ namespace MQTTnet.PacketDispatcher
         {
             _packetIdentifier = packetIdentifier;
             _owningPacketDispatcher = owningPacketDispatcher ?? throw new ArgumentNullException(nameof(owningPacketDispatcher));
-#if NET452
+#if NET452 || NET40
             _taskCompletionSource = new TaskCompletionSource<MqttBasePacket>();
 #else
             _taskCompletionSource = new TaskCompletionSource<MqttBasePacket>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -25,8 +25,14 @@ namespace MQTTnet.PacketDispatcher
 
         public async Task<TPacket> WaitOneAsync(TimeSpan timeout)
         {
+#if NET40
+            using (var timeoutToken = new CancellationTokenSource())
+            {
+                timeoutToken.CancelAfter(timeout);
+#else
             using (var timeoutToken = new CancellationTokenSource(timeout))
             {
+#endif
                 timeoutToken.Token.Register(() => Fail(new MqttCommunicationTimedOutException()));
 
                 var packet = await _taskCompletionSource.Task.ConfigureAwait(false);

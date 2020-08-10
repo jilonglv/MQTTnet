@@ -93,9 +93,13 @@ namespace MQTTnet.Client
                     _logger.Verbose("Connection with server established.");
 
                     _publishPacketReceiverQueue = new AsyncQueue<MqttPublishPacket>();
+#if NET40
+                    _publishPacketReceiverTask = TaskExtension.Run(() => ProcessReceivedPublishPackets(backgroundCancellationToken).Wait(), backgroundCancellationToken);
+                    _packetReceiverTask = TaskExtension.Run(() => TryReceivePacketsAsync(backgroundCancellationToken).Wait(), backgroundCancellationToken);
+#else
                     _publishPacketReceiverTask = Task.Run(() => ProcessReceivedPublishPackets(backgroundCancellationToken), backgroundCancellationToken);
-
                     _packetReceiverTask = Task.Run(() => TryReceivePacketsAsync(backgroundCancellationToken), backgroundCancellationToken);
+#endif
 
                     authenticateResult = await AuthenticateAsync(adapter, options.WillMessage, combined.Token).ConfigureAwait(false);
                 }
@@ -105,7 +109,11 @@ namespace MQTTnet.Client
 
                 if (Options.KeepAlivePeriod != TimeSpan.Zero)
                 {
+#if NET40
+                    _keepAlivePacketsSenderTask = TaskExtension.Run(() => TrySendKeepAliveMessagesAsync(backgroundCancellationToken).Wait(), backgroundCancellationToken);
+#else
                     _keepAlivePacketsSenderTask = Task.Run(() => TrySendKeepAliveMessagesAsync(backgroundCancellationToken), backgroundCancellationToken);
+#endif
                 }
 
                 _isConnected = true;
@@ -329,9 +337,11 @@ namespace MQTTnet.Client
                 var receiverTask = WaitForTaskAsync(_packetReceiverTask, sender);
                 var publishPacketReceiverTask = WaitForTaskAsync(_publishPacketReceiverTask, sender);
                 var keepAliveTask = WaitForTaskAsync(_keepAlivePacketsSenderTask, sender);
-
+#if NET40
+                Task.WaitAll(receiverTask, publishPacketReceiverTask, keepAliveTask);
+#else
                 await Task.WhenAll(receiverTask, publishPacketReceiverTask, keepAliveTask).ConfigureAwait(false);
-
+#endif
                 _publishPacketReceiverQueue?.Dispose();
             }
             catch (Exception e)
@@ -351,7 +361,11 @@ namespace MQTTnet.Client
                 {
                     // This handler must be executed in a new thread because otherwise a dead lock may happen
                     // when trying to reconnect in that handler etc.
+#if NET40
+                    TaskExtension.Run(() => disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception, authenticateResult, reasonCode))).Forget(_logger);
+#else
                     Task.Run(() => disconnectedHandler.HandleDisconnectedAsync(new MqttClientDisconnectedEventArgs(clientWasConnected, exception, authenticateResult, reasonCode))).Forget(_logger);
+#endif
                 }
             }
         }
@@ -447,7 +461,7 @@ namespace MQTTnet.Client
                     // due to some edge cases and was buggy in the past. Now we wait half a second because the
                     // min keep alive value is one second so that the server will wait 1.5 seconds for a PING
                     // packet.
-                    await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken).ConfigureAwait(false);
+                    await TaskExtension.Delay(TimeSpan.FromMilliseconds(100), cancellationToken).ConfigureAwait(false);
                 }
             }
             catch (Exception exception)

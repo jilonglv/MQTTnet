@@ -18,14 +18,18 @@ namespace MQTTnet.Internal
             _queue.Enqueue(item);
             _semaphore.Release();
         }
-
+#pragma warning disable 1998
         public async Task<AsyncQueueDequeueResult<TItem>> TryDequeueAsync(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
+#if NET40
+                    _semaphore.Wait(cancellationToken);
+#else
                     await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+#endif
                     cancellationToken.ThrowIfCancellationRequested();
                 }
                 catch (OperationCanceledException)
@@ -41,7 +45,7 @@ namespace MQTTnet.Internal
 
             return new AsyncQueueDequeueResult<TItem>(false, default(TItem));
         }
-
+#pragma warning restore 1998
         public AsyncQueueDequeueResult<TItem> TryDequeue()
         {
             if (_queue.TryDequeue(out var item))

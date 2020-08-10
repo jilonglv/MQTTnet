@@ -6,7 +6,9 @@
         {
             get
             {
-#if NET452
+#if NET40
+                return "net40";
+#elif NET452
                 return "net452";
 #elif NET461
                 return "net461";

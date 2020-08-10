@@ -47,6 +47,7 @@ namespace MQTTnet.Implementations
 
         public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
 
+#pragma warning disable 4014
         public bool Start(bool treatErrorsAsWarning, CancellationToken cancellationToken)
         {
             try
@@ -77,9 +78,11 @@ namespace MQTTnet.Implementations
 
                 _socket.Bind(_localEndPoint);
                 _socket.Listen(_options.ConnectionBacklog);
-
-                Task.Run(() => AcceptClientConnectionsAsync(cancellationToken), cancellationToken).Forget(_logger);
-
+#if NET40
+                TaskExtension.Run(() => AcceptClientConnectionsAsync(cancellationToken).Wait(), cancellationToken).Forget(_logger);
+#else
+                TaskExtension.Run(() => AcceptClientConnectionsAsync(cancellationToken), cancellationToken).Forget(_logger);
+#endif
                 return true;
             }
             catch (Exception exception)
@@ -93,7 +96,7 @@ namespace MQTTnet.Implementations
                 return false;
             }
         }
-
+#pragma warning restore 4014
         public void Dispose()
         {
             _socket?.Dispose();
@@ -102,7 +105,7 @@ namespace MQTTnet.Implementations
             _tlsCertificate?.Dispose();
 #endif
         }
-
+#pragma warning disable 4014
         async Task AcceptClientConnectionsAsync(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
@@ -114,8 +117,11 @@ namespace MQTTnet.Implementations
                     {
                         continue;
                     }
-
-                    Task.Run(() => TryHandleClientConnectionAsync(clientSocket), cancellationToken).Forget(_logger);
+#if NET40
+                    TaskExtension.Run(() => TryHandleClientConnectionAsync(clientSocket).Wait(), cancellationToken).Forget(_logger);
+#else
+                   TaskExtension.Run(() => TryHandleClientConnectionAsync(clientSocket), cancellationToken).Forget(_logger);
+#endif
                 }
                 catch (OperationCanceledException)
                 {
@@ -132,11 +138,11 @@ namespace MQTTnet.Implementations
                     }
 
                     _logger.Error(exception, $"Error while accepting connection at TCP listener {_localEndPoint} TLS={_tlsCertificate != null}.");
-                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+                    await TaskExtension.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
                 }
             }
         }
-
+#pragma warning restore 4014
         async Task TryHandleClientConnectionAsync(CrossPlatformSocket clientSocket)
         {
             Stream stream = null;
@@ -160,12 +166,19 @@ namespace MQTTnet.Implementations
                 if (_tlsCertificate != null)
                 {
                     var sslStream = new SslStream(stream, false, _tlsOptions.RemoteCertificateValidationCallback);
-
+#if NET40
+                    Task.Factory.FromAsync((callback, state) => sslStream.BeginAuthenticateAsServer(
+                        _tlsCertificate,
+                        _tlsOptions.ClientCertificateRequired,
+                        _tlsOptions.SslProtocol,
+                        _tlsOptions.CheckCertificateRevocation, callback, state), sslStream.EndAuthenticateAsServer, null).Wait();
+#else
                     await sslStream.AuthenticateAsServerAsync(
                         _tlsCertificate,
                         _tlsOptions.ClientCertificateRequired,
                         _tlsOptions.SslProtocol,
                         _tlsOptions.CheckCertificateRevocation).ConfigureAwait(false);
+#endif
 
                     stream = sslStream;
 

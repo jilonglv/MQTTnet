@@ -14,7 +14,7 @@ namespace MQTTnet.Server
             _callback = context =>
             {
                 callback(context);
-                return Task.FromResult(0);
+                return TaskExtension.FromResult(0);
             };
         }
 

@@ -31,7 +31,7 @@ namespace MQTTnet.Server.Status
         public Task ClearPendingApplicationMessagesAsync()
         {
             _session.ApplicationMessagesQueue.Clear();
-            return Task.FromResult(0);
+            return TaskExtension.FromResult(0);
         }
     }
 }
